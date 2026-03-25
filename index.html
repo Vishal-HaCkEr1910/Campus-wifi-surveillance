@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IIIT UNA Wi-Fi Surveillance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f6f8fd;
+      --surface:   #ffffff;
+      --card:      #fdfdff;
+      --soft:      #e7edfb;
+      --border:    #dfe6f3;
+      --accent:    #1e88e5;
+      --accent2:   #0f4c81;
+      --accent3:   #13a37b;
+      --warn:      #d97706;
+      --danger:    #cc3d3d;
+      --text:      #142033;
+      --muted:     #6b7280;
+      --bright:    #0f172a;
+      --shadow:    0 18px 40px rgba(15,23,42,.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: linear-gradient(180deg, #f9fbff 0%, #eef2f7 100%);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      padding: 32px 0 80px;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif; }
+
+    .wrapper { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+    .logo { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, #5dade2, var(--accent));
+      color: #fff;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 1.1rem;
+    }
+    .logo-text h1 { font-size: 1.4rem; letter-spacing: -.01em; color: var(--bright); }
+    .logo-text p { font-size: .85rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+
+    .header-meta { display: flex; align-items: center; gap: 18px; }
+    .add-btn { min-width: 150px; }
+
+    .tabs {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: .85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      background: radial-gradient(circle at top left, #4facfe, #00f2fe);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(79,172,254,.25);
+    }
+    .tab-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+
+    .pane { display: none; }
+    .pane.active { display: block; animation: fade-in .3s ease; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 25px rgba(20,32,51,.05);
+    }
+    .stat-label { font-size: .75rem; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .stat-value { font-size: 2rem; font-weight: 600; color: var(--bright); }
+    .stat-value.danger { color: var(--danger); }
+    .stat-value.warn { color: var(--warn); }
+    .stat-value.green { color: var(--accent3); }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 15px 30px rgba(20,32,51,.05);
+    }
+    .chart-title { font-size: .78rem; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; gap: 10px; align-items: center; font-size: .85rem; }
+    .bar-label { width: 90px; color: var(--muted); text-align: right; font-size: .75rem; }
+    .bar-outer { flex: 1; height: 10px; border-radius: 999px; background: var(--soft); overflow: hidden; }
+    .bar-inner { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4facfe, #00f2fe); transition: width .45s ease; }
+    .bar-count { width: 44px; text-align: right; color: var(--accent2); font-weight: 600; font-size: .78rem; }
+
+    .search-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 10px 20px rgba(20,32,51,.04); margin-bottom: 18px; }
+    .search-row, .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search-input-wrap { flex: 1; min-width: 260px; position: relative; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    input[type="text"], select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 12px 14px 12px 40px;
+      font-size: .9rem;
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    select { padding-left: 14px; min-width: 150px; }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(30,136,229,.15);
+      outline: none;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .btn-primary { background: linear-gradient(120deg, #4facfe, #00f2fe); color: #083358; box-shadow: 0 15px 25px rgba(79,172,254,.3); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-secondary { background: var(--soft); color: var(--accent2); border: 1px solid transparent; }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(204,61,61,.12); color: var(--danger); border: 1px solid rgba(204,61,61,.3); }
+    .btn-sm { padding: 6px 14px; font-size: .75rem; }
+
+    .hostel-legend { font-size: .75rem; color: var(--muted); margin-top: 12px; }
+    .hostel-legend span { font-weight: 600; color: var(--accent2); }
+
+    #field-badge {
+      display: none;
+      background: rgba(79,172,254,.15);
+      color: var(--accent2);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: .78rem;
+      margin-bottom: 12px;
+      width: fit-content;
+      border: 1px solid rgba(79,172,254,.3);
+    }
+
+    .table-wrap {
+      background: var(--surface);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 18px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    .table-header .count span { color: var(--accent); font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead { background: var(--soft); }
+    th { text-align: left; padding: 12px 16px; font-size: .72rem; letter-spacing: .05em; color: var(--muted); }
+    th:first-child { text-align: center; min-width: 120px; }
+    td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: .85rem; }
+    tbody tr { height: 120px; vertical-align: middle; }
+    tbody tr:hover { background: rgba(79,172,254,.05); }
+    tbody tr.flagged { background: rgba(204,61,61,.08); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    code { font-family: 'Space Grotesk', monospace; font-size: .78rem; color: var(--accent2); }
+
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
+    .badge-jh { background: rgba(79,172,254,.15); color: var(--accent2); }
+    .badge-ch { background: rgba(249,115,255,.15); color: #a836c9; }
+    .badge-bh { background: rgba(19,163,123,.15); color: var(--accent3); }
+    .badge-flag { background: rgba(204,61,61,.15); color: var(--danger); }
+    .badge-ok { background: rgba(19,163,123,.15); color: var(--accent3); }
+    .badge-phone { background: rgba(248,196,113,.2); color: var(--warn); }
+    .badge-laptop { background: rgba(99,102,241,.15); color: #4c51bf; }
+    .badge-tablet { background: rgba(76,175,80,.15); color: #22863a; }
+
+    .bw-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .bw-bar { height: 6px; flex: 1; border-radius: 999px; background: var(--soft); overflow: hidden; }
+    .bw-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #13a37b, #4facfe); transition: width .3s ease; }
+    .bw-fill.warn { background: linear-gradient(90deg, #f2994a, #d14343); }
+
+    .detail-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: 8px;
+      color: var(--accent2);
+    }
+    .detail-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .pagination {
+      display: flex; justify-content: center; align-items: center; gap: 8px;
+      padding: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .page-btn { border: 1px solid var(--border); background: var(--surface); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+    .page-btn.current { background: rgba(79,172,254,.15); border-color: transparent; color: var(--accent2); font-weight: 600; }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .page-info { color: var(--muted); font-size: .78rem; }
+
+    .alert-item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; gap: 16px; margin-bottom: 12px; box-shadow: 0 10px 20px rgba(20,32,51,.05); }
+    .alert-item.HIGH { border-left: 4px solid var(--danger); }
+    .alert-item.MEDIUM { border-left: 4px solid var(--warn); }
+    .alert-item.LOW { border-left: 4px solid var(--accent3); }
+    .alert-sev { font-size: .7rem; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+    .alert-sev.HIGH { background: rgba(204,61,61,.15); color: var(--danger); }
+    .alert-sev.MEDIUM { background: rgba(217,119,6,.15); color: var(--warn); }
+    .alert-sev.LOW { background: rgba(19,163,123,.15); color: var(--accent3); }
+    .alert-body h4 { font-size: .95rem; margin-bottom: 4px; color: var(--bright); }
+    .alert-body p { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(12,23,43,.6); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 10; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border-radius: 20px; border: 1px solid var(--border); padding: 28px; width: 92%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow); animation: slide-up .25s ease; }
+    @keyframes slide-up { from { transform: translateY(25px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-close { border: none; background: transparent; font-size: 1.4rem; color: var(--muted); cursor: pointer; }
+    .modal-close:hover { color: var(--accent2); }
+    .modal h2 { font-size: 1.4rem; margin-bottom: 18px; color: var(--bright); }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .detail-field { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+    .detail-field .key { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 4px; }
+    .detail-field .val { font-weight: 600; color: var(--bright); }
+
+    .form-modal { max-width: 680px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 18px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; font-size: .82rem; color: var(--muted); }
+    .form-group label { font-weight: 600; color: var(--bright); font-size: .78rem; letter-spacing: .02em; }
+    .form-group input,
+    .form-group select {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: .85rem;
+      font-family: 'IBM Plex Sans', sans-serif;
+      color: var(--text);
+      background: var(--surface);
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(30,136,229,.12); outline: none; }
+    .form-group input[type="file"] { padding: 8px 0; }
+    .form-group input[type="file"]::file-selector-button { background: var(--soft); color: var(--accent2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .form-group input[type="file"]::file-selector-button:hover { background: rgba(30,136,229,.1); }
+    
+    .student-photo-cell { 
+      min-width: 120px; max-width: 120px; text-align: center; padding: 12px 8px; 
+    }
+    .student-image-thumbnail { 
+      width: 90px; height: 90px; border-radius: 8px; object-fit: cover; 
+      border: 2px solid var(--border); cursor: pointer; transition: transform .2s; 
+    }
+    .student-image-thumbnail:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(30,136,229,.2); }
+    .form-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px; }
+
+    .section-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .15em; color: var(--muted); margin: 20px 0 12px; border-top: 1px solid var(--border); padding-top: 14px; }
+    .session-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .85rem; color: var(--text); }
+    .session-row:last-child { border-bottom: none; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-size: .9rem; }
+    .empty-state .icon { font-size: 2.6rem; opacity: .4; display: block; margin-bottom: 12px; }
+
+    .spinner { width: 20px; height: 20px; border-radius: 50%; border: 3px solid rgba(30,136,229,.2); border-top-color: var(--accent); animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 10px 18px; box-shadow: var(--shadow); opacity: 0; transform: translateY(10px); transition: all .25s; font-size: .85rem; }
+    #toast.show { opacity: 1; transform: none; }
+
+    .top-bw-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .85rem; }
+    .top-bw-row:last-child { border-bottom: none; }
+    .top-bw-name { color: var(--bright); font-weight: 600; }
+    .top-bw-val { color: var(--warn); font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">IIITU</div>
+      <div class="logo-text">
+        <h1>IIIT UNA</h1>
+        <p>Wi-Fi Surveillance</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <button class="btn btn-primary add-btn" onclick="openForm()">Add Student</button>
+    </div>
+  </header>
+
+  <!-- ── TABS ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(event,'dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab(event,'search')">Search</button>
+    <button class="tab-btn" onclick="switchTab(event,'hostel')">By Hostel</button>
+    <button class="tab-btn" onclick="switchTab(event,'alerts')">Alerts</button>
+  </div>
+
+  <!-- ══════════════════════════════
+       DASHBOARD PANE
+  ════════════════════════════════ -->
+  <div class="pane active" id="pane-dashboard">
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total Clients</div><div class="stat-value" id="s-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value danger" id="s-flagged">—</div></div>
+      <div class="stat-card"><div class="stat-label">Open Alerts</div><div class="stat-value warn" id="s-alerts">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Routers</div><div class="stat-value green" id="s-routers">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Bandwidth</div><div class="stat-value" id="s-bw" style="font-size:1.3rem">—</div></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Clients by Hostel</div>
+        <div class="bar-chart" id="chart-hostel"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Clients by Branch</div>
+        <div class="bar-chart" id="chart-branch"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Device Types</div>
+        <div class="bar-chart" id="chart-device"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="chart-card">
+        <div class="chart-title">Top Bandwidth Users</div>
+        <div id="top-bw-list"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Recent Alerts</div>
+        <div id="recent-alerts-mini"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       SEARCH PANE
+  ════════════════════════════════ -->
+  <div class="pane" id="pane-search">
+
+    <div class="search-section">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="q" placeholder="IP, MAC, Roll No, Name, Room, Device…"
+                 onkeydown="if(event.key==='Enter')doSearch(1)" />
+        </div>
+        <button class="btn btn-primary" onclick="doSearch(1)">Search</button>
+        <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+        <button class="btn btn-secondary" onclick="exportCSV()" title="Download CSV">⬇ Export</button>
+      </div>
+      <div class="filter-row">
+        <select id="f-hostel" onchange="doSearch(1)">
+          <option value="">All Hostels</option>
+          <option value="JH">JH — Jatharagni Hostel</option>
+          <option value="CH">CH — Chitagni Hostel</option>
+          <option value="BH">BH — Bhutaragni Hostel</option>
+        </select>
+        <select id="f-branch" onchange="doSearch(1)">
+          <option value="">All Branches</option>
+          <option value="CSE">CSE</option>
+          <option value="IT">IT</option>
+          <option value="ECE">ECE</option>
+          <option value="CyberSec">CyberSec</option>
+          <option value="DS">DS</option>
+        </select>
+        <select id="f-year" onchange="doSearch(1)">
+          <option value="">All Years</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+        <select id="f-flagged" onchange="doSearch(1)">
+          <option value="">All Status</option>
+          <option value="1">Flagged only</option>
+          <option value="0">Clean only</option>
+        </select>
+        <select id="f-limit" onchange="doSearch(1)">
+          <option value="25">25 / page</option>
+          <option value="50">50 / page</option>
+          <option value="100">100 / page</option>
+        </select>
+      </div>
+      <p class="hostel-legend"><span>JH</span> = Jatharagni Hostel &nbsp;·&nbsp; <span>CH</span> = Chitagni Hostel &nbsp;·&nbsp; <span>BH</span> = Bhutaragni Hostel</p>
+    </div>
+
+    <div id="field-badge"></div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- ══════════════════════════════
+       HOSTEL PANE
+  ════════════════════════════════ -->
+  <div class="pane" id="pane-hostel">
+    <div class="filter-row" style="margin-bottom:20px">
+      <select id="h-select" onchange="loadHostel(1)">
+        <option value="JH">JH — Jatharagni Hostel</option>
+        <option value="CH">CH — Chitagni Hostel</option>
+        <option value="BH">BH — Bhutaragni Hostel</option>
+      </select>
+      <button class="btn btn-secondary" onclick="exportCSV(true)">⬇ Export Hostel CSV</button>
+    </div>
+    <p class="hostel-legend" style="margin-top:-8px;margin-bottom:16px"><span>JH</span> = Jatharagni Hostel &nbsp;·&nbsp; <span>CH</span> = Chitagni Hostel &nbsp;·&nbsp; <span>BH</span> = Bhutaragni Hostel</p>
+    <div class="stats-grid" id="hostel-stats" style="grid-template-columns:repeat(3,1fr);max-width:500px;margin-bottom:24px;"></div>
+    <div id="hostel-results"></div>
+  </div>
+
+  <!-- ══════════════════════════════
+       ALERTS PANE
+  ════════════════════════════════ -->
+  <div class="pane" id="pane-alerts">
+    <div class="filter-row" style="margin-bottom:20px">
+      <select id="alert-sev" onchange="loadAlerts()">
+        <option value="">All Severities</option>
+        <option value="HIGH">HIGH</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="LOW">LOW</option>
+      </select>
+    </div>
+    <div id="alerts-list"></div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<!-- ── ADD STUDENT MODAL ── -->
+<div class="modal-overlay" id="form-modal" onclick="if(event.target===this)closeForm()">
+  <div class="modal form-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;">
+      <h2 style="margin:0">Add Student</h2>
+      <button class="modal-close" type="button" onclick="closeForm()">✕</button>
+    </div>
+    <form id="student-form" onsubmit="submitStudent(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="student-name">Full Name</label>
+          <input id="student-name" name="name" placeholder="Aarav Mehta" required />
+        </div>
+        <div class="form-group">
+          <label for="student-roll">Roll Number</label>
+          <input id="student-roll" name="roll_no" placeholder="24101" required />
+        </div>
+        <div class="form-group">
+          <label for="student-branch">Branch</label>
+          <select id="student-branch" name="branch" required>
+            <option value="CSE">CSE</option>
+            <option value="IT">IT</option>
+            <option value="ECE">ECE</option>
+            <option value="CyberSec">CyberSec</option>
+            <option value="DS">DS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="student-year">Year</label>
+          <input id="student-year" name="year" type="number" min="2022" max="2030" value="2024" required />
+        </div>
+        <div class="form-group">
+          <label for="student-hostel">Hostel</label>
+          <select id="student-hostel" name="hostel" required>
+            <option value="JH">JH</option>
+            <option value="CH">CH</option>
+            <option value="BH">BH</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="student-room">Room No</label>
+          <input id="student-room" name="room_no" placeholder="101" required />
+        </div>
+        <div class="form-group">
+          <label for="student-ip">IP Address</label>
+          <input id="student-ip" name="ip_address" placeholder="10.0.0.50" required />
+        </div>
+        <div class="form-group">
+          <label for="student-mac">MAC Address</label>
+          <input id="student-mac" name="mac_address" placeholder="AA:BB:CC:DD:EE:FF" required />
+        </div>
+        <div class="form-group">
+          <label for="student-device">Device Name</label>
+          <input id="student-device" name="device_name" placeholder="MacBook Air" required />
+        </div>
+        <div class="form-group">
+          <label for="student-type">Device Type</label>
+          <select id="student-type" name="device_type" required>
+            <option value="Laptop">Laptop</option>
+            <option value="Phone">Phone</option>
+            <option value="Tablet">Tablet</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="student-os">OS Hint</label>
+          <input id="student-os" name="os_hint" placeholder="Windows" />
+        </div>
+        <div class="form-group">
+          <label for="student-bw">Bandwidth (MB)</label>
+          <input id="student-bw" name="bandwidth_mb" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1">
+          <label for="student-image">Student Photo</label>
+          <input id="student-image" type="file" accept="image/*" onchange="previewImage()" />
+          <img id="image-preview" style="display:none;max-width:150px;max-height:150px;margin-top:10px;border-radius:8px;border:1px solid var(--border)" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ── UTILS ──────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const HOSTEL_NAMES = {
+    JH: 'Jatharagni Hostel',
+    CH: 'Chitagni Hostel',
+    BH: 'Bhutaragni Hostel'
+  };
+  const formatHostel = code => {
+    if (!code) return '';
+    return HOSTEL_NAMES[code] ? `${code} · ${HOSTEL_NAMES[code]}` : code;
+  };
+  let currentPage = 1;
+  let currentPagination = null;
+  let activeTab = 'dashboard';
+  let currentHostelPage = 1;
+
+  function toast(msg, duration = 2400) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  function fmt(n) { return Number(n).toLocaleString(); }
+  function fmtBW(mb) {
+    if (mb >= 1000) return `${(mb/1000).toFixed(1)} GB`;
+    return `${Math.round(mb)} MB`;
+  }
+  function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
+  }
+
+  // ── TABS ──────────────────────────────────────────────
+  function switchTab(evt, name) {
+    activeTab = name;
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    $(`pane-${name}`).classList.add('active');
+    if (evt?.target) evt.target.classList.add('active');
+    if (name === 'dashboard') loadStats();
+    if (name === 'hostel')    loadHostel(currentHostelPage || 1);
+    if (name === 'alerts')    loadAlerts();
+    if (name === 'search' && hasSearchFilters()) doSearch(currentPage);
+  }
+
+  // ── DASHBOARD ─────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const d = await fetch('/api/stats').then(r=>r.json());
+      if (!d.ok) return;
+      const t = d.totals;
+      $('s-total').textContent    = fmt(t.clients);
+      $('s-flagged').textContent  = fmt(t.flagged);
+      $('s-alerts').textContent   = fmt(t.alerts);
+      $('s-routers').textContent  = fmt(t.routers || 0);
+      $('s-bw').textContent       = fmtBW(t.bandwidth_mb);
+
+      renderBarChart('chart-hostel', d.byHostel,  'hostel',      'count');
+      renderBarChart('chart-branch', d.byBranch,  'branch',      'count');
+      renderBarChart('chart-device', d.byDevice,  'device_type', 'count');
+
+      const maxBW = Math.max(...d.topBW.map(r=>r.bandwidth_mb), 1);
+      $('top-bw-list').innerHTML = d.topBW.map(r => `
+        <div class="top-bw-row">
+          <div>
+            <div class="top-bw-name">${r.name}</div>
+            <div style="color:var(--muted);font-size:.65rem">${r.roll_no} · ${r.hostel}</div>
+          </div>
+          <div class="top-bw-val">${fmtBW(r.bandwidth_mb)}</div>
+        </div>`).join('');
+
+      $('recent-alerts-mini').innerHTML = d.recentAlerts.slice(0,5).map(a => `
+        <div class="top-bw-row">
+          <div>
+            <div class="top-bw-name" style="font-size:.72rem">${a.alert_type.replace(/_/g,' ')}</div>
+            <div style="color:var(--muted);font-size:.65rem">${a.name} · ${a.hostel}</div>
+          </div>
+          <span class="alert-sev ${a.severity}">${a.severity}</span>
+        </div>`).join('') || '<div style="color:var(--muted);font-size:.75rem;padding:12px 0">No open alerts</div>';
+
+    } catch(e) { console.error(e); }
+  }
+
+  function renderBarChart(elId, data, labelKey, valueKey) {
+    const max = Math.max(...data.map(d=>d[valueKey]), 1);
+    $(elId).innerHTML = data.map(d => `
+      <div class="bar-row">
+        <div class="bar-label">${d[labelKey]}</div>
+        <div class="bar-outer"><div class="bar-inner" style="width:${(d[valueKey]/max*100).toFixed(1)}%"></div></div>
+        <div class="bar-count">${fmt(d[valueKey])}</div>
+      </div>`).join('');
+  }
+
+  loadStats();
+
+  // ── SEARCH ────────────────────────────────────────────
+  function hasSearchFilters() {
+    const flagged = $('f-flagged').value;
+    return Boolean(
+      $('q').value.trim() ||
+      $('f-hostel').value ||
+      $('f-branch').value ||
+      $('f-year').value ||
+      flagged !== ''
+    );
+  }
+
+  async function doSearch(page = 1) {
+    currentPage = page;
+    const q       = $('q').value.trim();
+    const hostel  = $('f-hostel').value;
+    const branch  = $('f-branch').value;
+    const year    = $('f-year').value;
+    const flagged = $('f-flagged').value;
+    const limit   = $('f-limit').value;
+
+    if (!hasSearchFilters()) {
+      $('search-results').innerHTML = `<div class="empty-state"><div class="icon">⌕</div><p>Enter a query or select a filter</p></div>`;
+      return;
+    }
+
+    $('search-results').innerHTML = `<div style="text-align:center;padding:40px"><div class="spinner"></div></div>`;
+
+    const params = new URLSearchParams({ page, limit });
+    if (q)       params.set('q', q);
+    if (hostel)  params.set('hostel', hostel);
+    if (branch)  params.set('branch', branch);
+    if (year)    params.set('year', year);
+    if (flagged !== '') params.set('flagged', flagged);
+
+    try {
+      const data = await fetch(`/api/search?${params}`).then(r=>r.json());
+      if (data.error) { $('search-results').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${data.error}</p></div>`; return; }
+
+      const badge = $('field-badge');
+      if (data.detectedField) {
+        badge.textContent = `⌥ Searching by: ${data.detectedField}`;
+        badge.style.display = 'block';
+      } else { badge.style.display = 'none'; }
+
+      currentPagination = data.pagination;
+      renderResultsTable(data.results, data.pagination, 'search-results', 'doSearch');
+
+    } catch(e) {
+      $('search-results').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Network error</p></div>`;
+    }
+  }
+
+  function clearSearch() {
+    $('q').value = '';
+    ['f-hostel','f-branch','f-year','f-flagged'].forEach(id => $(id).value = '');
+    $('field-badge').style.display = 'none';
+    $('search-results').innerHTML = `<div class="empty-state"><div class="icon">⌕</div><p>Enter a query or select a filter</p></div>`;
+  }
+
+  function exportCSV(hostelOnly = false) {
+    const params = new URLSearchParams();
+    if (hostelOnly) { params.set('hostel', $('h-select').value); }
+    else {
+      const h = $('f-hostel').value; const b = $('f-branch').value;
+      if (h) params.set('hostel', h);
+      if (b) params.set('branch', b);
+    }
+    window.open(`/api/export/csv?${params}`, '_blank');
+    toast('Downloading CSV…');
+  }
+
+  // ── HOSTEL ────────────────────────────────────────────
+  async function loadHostel(page = 1) {
+    currentHostelPage = page;
+    const hostel = $('h-select').value;
+    const limit  = 50;
+    $('hostel-results').innerHTML = `<div style="text-align:center;padding:40px"><div class="spinner"></div></div>`;
+    try {
+      const data = await fetch(`/api/hostel/${hostel}?page=${page}&limit=${limit}`).then(r=>r.json());
+      const s = data.summary;
+      $('hostel-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value">${fmt(s.total)}</div></div>
+        <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value danger">${fmt(s.flagged)}</div></div>
+        <div class="stat-card"><div class="stat-label">Bandwidth</div><div class="stat-value" style="font-size:1.1rem">${fmtBW(s.total_bw||0)}</div></div>`;
+      renderResultsTable(data.results, data.pagination, 'hostel-results', 'loadHostel');
+    } catch(e) {
+      $('hostel-results').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load</p></div>`;
+    }
+  }
+
+  // ── ALERTS ────────────────────────────────────────────
+  async function loadAlerts() {
+    const sev = $('alert-sev').value;
+    $('alerts-list').innerHTML = `<div style="text-align:center;padding:40px"><div class="spinner"></div></div>`;
+    try {
+      const url  = `/api/alerts${sev ? `?severity=${sev}` : ''}`;
+      const data = await fetch(url).then(r=>r.json());
+      if (!data.alerts.length) {
+        $('alerts-list').innerHTML = `<div class="empty-state"><div class="icon">✓</div><p>No open alerts</p></div>`;
+        return;
+      }
+      $('alerts-list').innerHTML = data.alerts.map(a => `
+        <div class="alert-item ${a.severity}">
+          <span class="alert-sev ${a.severity}">${a.severity}</span>
+          <div class="alert-body" style="flex:1">
+            <h4>${a.alert_type.replace(/_/g,' ')} — ${a.name} (${a.roll_no})</h4>
+            <p>${a.description || ''}</p>
+            <p style="margin-top:4px;font-size:.65rem">
+              Hostel: <span style="color:var(--bright)">${formatHostel(a.hostel)}</span> &nbsp;·&nbsp;
+              IP: <span style="color:var(--bright)">${a.ip_address}</span> &nbsp;·&nbsp;
+              BW: <span style="color:var(--warn)">${fmtBW(a.bandwidth_mb)}</span>
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openDetail(${a.client_id})">View</button>
+        </div>`).join('');
+    } catch(e) {
+      $('alerts-list').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load alerts</p></div>`;
+    }
+  }
+
+  // ── RENDER TABLE ──────────────────────────────────────
+  const MAX_BW = 16000;
+
+  function renderResultsTable(rows, pagination, targetId, pageFnName) {
+    if (!rows.length) {
+      $(targetId).innerHTML = `<div class="empty-state"><div class="icon">∅</div><p>No results found</p></div>`;
+      return;
+    }
+
+    const hostelBadge = h => ({JH:'badge-jh',CH:'badge-ch',BH:'badge-bh'}[h] || '');
+    const deviceBadge = t => ({Phone:'badge-phone',Laptop:'badge-laptop',Tablet:'badge-tablet'}[t] || '');
+
+    const rows_html = rows.map(r => {
+      const bwPct    = Math.min(100, (r.bandwidth_mb / MAX_BW) * 100).toFixed(1);
+      const bwHigh   = r.bandwidth_mb > 7000;
+      const hostelLabel = formatHostel(r.hostel);
+      const imageSrc = r.image_data ? `data:${r.image_mime_type || 'image/jpeg'};base64,${r.image_data}` : '';
+      const imageHtml = imageSrc
+        ? `<img src="${imageSrc}" class="student-image-thumbnail" title="Click to open full image" onclick="openStudentImage(${r.id})" alt="Student photo" />`
+        : '<span style="font-size:.7rem;color:var(--muted)">No Photo</span>';
+      return `<tr class="${r.is_flagged ? 'flagged' : ''}">
+        <td class="student-photo-cell">${imageHtml}</td>
+        <td><code style="font-size:.7rem;color:var(--accent)">${r.ip_address}</code></td>
+        <td><code style="font-size:.65rem;color:var(--muted)">${r.mac_address || '—'}</code></td>
+        <td style="color:var(--bright)">${r.name}</td>
+        <td><span style="color:var(--accent2)">${r.roll_no}</span></td>
+        <td>${r.branch} <span style="color:var(--muted)">'${String(r.year).slice(2)}</span></td>
+        <td style="color:var(--muted)">${r.room_no}</td>
+        <td><span class="badge ${deviceBadge(r.device_type)}">${r.device_type}</span></td>
+        <td style="font-size:.7rem;color:var(--muted);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.device_name}">${r.device_name}</td>
+        <td>
+          <div class="bw-bar-wrap">
+            <div class="bw-bar"><div class="bw-fill${bwHigh?' warn':''}" style="width:${bwPct}%"></div></div>
+            <span style="font-size:.68rem;white-space:nowrap;color:${bwHigh?'var(--warn)':'var(--muted)'}">${fmtBW(r.bandwidth_mb)}</span>
+          </div>
+        </td>
+        <td>
+          ${r.is_flagged ? '<span class="badge badge-flag">⚑ flagged</span>' : '<span class="badge badge-ok">✓ clean</span>'}
+        </td>
+        <td>
+          <button class="detail-btn" onclick="openDetail(${r.id})">Details</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const { page, pages, total, limit } = pagination;
+
+    $(targetId).innerHTML = `
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="count"><span>${fmt(total)}</span> results</div>
+          <div style="color:var(--muted);font-size:.68rem">Page ${page} of ${pages}</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Photo</th><th>IP</th><th>MAC</th><th>Name</th><th>Roll</th><th>Branch</th>
+              <th>Hostel</th><th>Room</th><th>Type</th><th>Device</th>
+              <th>Bandwidth</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody>${rows_html}</tbody>
+          </table>
+        </div>
+        ${pages > 1 ? renderPagination(page, pages, pageFnName) : ''}
+      </div>`;
+  }
+
+  function renderPagination(current, pages, fnName) {
+    const pageNums = [];
+    for (let p = Math.max(1, current-2); p <= Math.min(pages, current+2); p++) pageNums.push(p);
+    return `<div class="pagination">
+      <button class="page-btn" onclick="${fnName}(${current-1})" ${current===1?'disabled':''}>← Prev</button>
+      ${current > 3 ? `<button class="page-btn" onclick="${fnName}(1)">1</button><span class="page-info">…</span>` : ''}
+      ${pageNums.map(p => `<button class="page-btn${p===current?' current':''}" onclick="${fnName}(${p})">${p}</button>`).join('')}
+      ${current < pages - 2 ? `<span class="page-info">…</span><button class="page-btn" onclick="${fnName}(${pages})">${pages}</button>` : ''}
+      <button class="page-btn" onclick="${fnName}(${current+1})" ${current===pages?'disabled':''}>Next →</button>
+      <span class="page-info">${current} / ${pages}</span>
+    </div>`;
+  }
+
+  // ── MODAL ─────────────────────────────────────────────
+  async function openDetail(id) {
+    $('modal').classList.add('open');
+    $('modal-content').innerHTML = `<div style="text-align:center;padding:40px"><div class="spinner"></div></div>`;
+    try {
+      const data = await fetch(`/api/client/${id}`).then(r=>r.json());
+      const c = data.client;
+      const imageSrc = c.image_data ? `data:${c.image_mime_type || 'image/jpeg'};base64,${c.image_data}` : '';
+      const imageHtml = imageSrc ? `<div style="text-align:center;margin-bottom:20px"><img src="${imageSrc}" style="max-width:200px;max-height:200px;border-radius:10px;border:1px solid var(--border)" alt="Student photo" /></div>` : '';
+      $('modal-content').innerHTML = `
+        <h2>Client Details</h2>
+        ${imageHtml}
+        <div class="detail-grid">
+          ${df('Name', c.name)}
+          ${df('Roll No', c.roll_no)}
+          ${df('Branch', `${c.branch} ('${String(c.year).slice(2)})`)}
+          ${df('Hostel / Room', `${formatHostel(c.hostel)} — Rm ${c.room_no}`)}
+          ${df('IP Address', c.ip_address)}
+          ${df('MAC Address', c.mac_address || '—')}
+          ${df('Device', c.device_name)}
+          ${df('Device Type', c.device_type)}
+          ${df('OS', c.os_hint || '—')}
+          ${df('Bandwidth', fmtBW(c.bandwidth_mb))}
+          ${df('First Seen', fmtDate(c.first_seen))}
+          ${df('Last Seen', fmtDate(c.last_seen))}
+          ${df('Status', c.is_flagged ? '⚑ FLAGGED' : '✓ Clean')}
+        </div>
+        <button class="btn ${c.is_flagged?'btn-secondary':'btn-danger'} btn-sm"
+          onclick="toggleFlag(${c.id}, this)">
+          ${c.is_flagged ? 'Unflag' : '⚑ Flag Client'}
+        </button>
+
+        <div class="section-label">Recent Sessions (${data.sessions.length})</div>
+        ${data.sessions.length ? data.sessions.map(s=>`
+          <div class="session-row">
+            <span>${fmtDate(s.connected_at)}</span>
+            <span style="color:var(--muted)">${s.duration_min} min</span>
+            <span style="color:var(--accent3)">↑${fmtBW(s.bytes_up/1e6)} ↓${fmtBW(s.bytes_down/1e6)}</span>
+          </div>`).join('') : '<p style="color:var(--muted);font-size:.75rem">No session data</p>'}
+
+        <div class="section-label">Alerts (${data.alerts.length})</div>
+        ${data.alerts.length ? data.alerts.map(a=>`
+          <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:.72rem">
+            <span class="alert-sev ${a.severity}" style="margin-right:8px">${a.severity}</span>
+            <span style="color:var(--bright)">${a.alert_type.replace(/_/g,' ')}</span>
+            <p style="color:var(--muted);font-size:.65rem;margin-top:3px">${a.description||''}</p>
+          </div>`).join('') : '<p style="color:var(--muted);font-size:.75rem">No alerts</p>'}`;
+    } catch(e) {
+      $('modal-content').innerHTML = `<p style="color:var(--danger)">Failed to load client</p>`;
+    }
+  }
+
+  function df(key, val) {
+    return `<div class="detail-field">
+      <div class="key">${key}</div>
+      <div class="val">${val}</div>
+    </div>`;
+  }
+
+  async function toggleFlag(id, btn) {
+    try {
+      const d = await fetch(`/api/client/${id}/flag`, {method:'PATCH'}).then(r=>r.json());
+      if (d.ok) {
+        btn.textContent = d.is_flagged ? 'Unflag' : '⚑ Flag Client';
+        btn.className = `btn ${d.is_flagged?'btn-secondary':'btn-danger'} btn-sm`;
+        toast(d.is_flagged ? 'Client flagged' : 'Client unflagged');
+      }
+    } catch(e) { toast('Error toggling flag'); }
+  }
+
+  function openStudentImage(id) {
+    window.open(`/api/client/${id}/image`, '_blank', 'noopener');
+  }
+
+  function openForm() {
+    const form = $('student-form');
+    if (form) form.reset();
+    $('form-modal').classList.add('open');
+  }
+
+  function closeForm() {
+    $('form-modal').classList.remove('open');
+    const form = $('student-form');
+    if (form) form.reset();
+    const preview = $('image-preview');
+    if (preview) {
+      preview.style.display = 'none';
+      preview.src = '';
+    }
+  }
+
+  async function submitStudent(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.year = Number(payload.year);
+      payload.bandwidth_mb = Number(payload.bandwidth_mb || 0);
+      delete payload['student-image']; // Remove file input from payload
+      
+      // Handle image file
+      const imageFile = $('student-image').files[0];
+      if (imageFile) {
+        const reader = new FileReader();
+        await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            payload.image_data = reader.result.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+            payload.image_mime_type = imageFile.type || 'image/jpeg';
+            resolve();
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+      }
+      
+      const res = await fetch('/api/client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unable to save student');
+      toast('Student saved');
+      closeForm();
+      loadStats();
+      if (activeTab === 'hostel') loadHostel(currentHostelPage);
+      if (activeTab === 'alerts') loadAlerts();
+      if (activeTab === 'search' && hasSearchFilters()) doSearch(currentPage);
+    } catch(err) {
+      toast(err.message || 'Error saving student', 3200);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function previewImage() {
+    const file = $('student-image').files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = $('image-preview');
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function closeModal() { $('modal').classList.remove('open'); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal();
+      closeForm();
+    }
+  });
+
+  setInterval(() => {
+    if (document.hidden) return;
+    if (activeTab === 'dashboard') loadStats();
+    if (activeTab === 'alerts') loadAlerts();
+    if (activeTab === 'hostel') loadHostel(currentHostelPage);
+    if (activeTab === 'search' && hasSearchFilters()) doSearch(currentPage);
+  }, 45000);
+</script>
+</body>
+</html>
